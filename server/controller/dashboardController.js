@@ -1,33 +1,39 @@
-import Expense from "../models/Expense.js";
 import SalarySlip from "../models/SalarySlip.js";
+import Expense from "../models/Expense.js";
 
-// Employee Dashboard: salary + expenses history
-export const getDashboardData = async (req, res) => {
+// GET http://localhost:4000/api/dashboard/employee
+export const getEmployeeDashboard = async (req, res) => {
   try {
-    const employeeId = req.user.id;
+    const salarySlips = await SalarySlip.find({ employee: req.user.id });
+    const expenses = await Expense.find({ employee: req.user.id });
 
-    const expenses = await Expense.find({ employee: employeeId }).sort({ month: 1 });
-    const salarySlips = await SalarySlip.find({ employee: employeeId }).sort({ month: 1 });
-
-    res.json({ expenses, salarySlips });
+    return res.json({
+      success: true,
+      salary: salarySlips,
+      expenses: expenses,
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Admin Dashboard (optional): overview of all employees
+// GET http://localhost:4000/api/dashboard/admin
 export const getAdminDashboardData = async (req, res) => {
   try {
-    const expenses = await Expense.aggregate([
-      { $group: { _id: "$month", totalExpenses: { $sum: "$amount" } } }
+    const totalSalary = await SalarySlip.aggregate([
+      { $group: { _id: null, total: { $sum: "$netSalary" } } },
     ]);
 
-    const salaries = await SalarySlip.aggregate([
-      { $group: { _id: "$month", totalSalaries: { $sum: "$netSalary" } } }
+    const totalExpenses = await Expense.aggregate([
+      { $group: { _id: null, total: { $sum: "$amount" } } },
     ]);
 
-    res.json({ expenses, salaries });
+    return res.json({
+      success: true,
+      totalSalary: totalSalary[0]?.total || 0,
+      totalExpenses: totalExpenses[0]?.total || 0,
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };

@@ -1,12 +1,15 @@
 import express from "express";
 import authUser from "../middleware/authUser.js";
 import authAdmin from "../middleware/authAdmin.js";
-import { addExpense, getMyExpenses, getAllExpenses } from "../controller/expenseController.js";
+import { createExpense, getMyExpenses, getAllExpenses } from "../controller/expenseController.js";
 
 const router = express.Router();
 
-router.post("/", authUser, addExpense);
-router.get("/", authUser, getMyExpenses);
-router.get("/all", authUser, authAdmin, getAllExpenses);
+// Employee
+router.post("/create", authUser, createExpense);
+router.get("/my-expenses", authUser, getMyExpenses);
+
+// Admin
+router.get("/all", authAdmin, getAllExpenses);
 
 export default router;

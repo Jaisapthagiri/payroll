@@ -1,39 +1,44 @@
-import Expense from '../models/Expense.js'
+import Expense from "../models/Expense.js";
 
-// Employee: Submit an expense
-export const addExpense = async (req, res) => {
+// POST http://localhost:4000/api/expenses/create
+export const createExpense = async (req, res) => {
   try {
     const { month, amount, description } = req.body;
 
+    if (!month || !amount) {
+      return res.json({ success: false, message: "Missing required fields" });
+    }
+
     const expense = await Expense.create({
-      employee: req.user.id,  
+      employee: req.user.id,
       month,
       amount,
       description,
     });
 
-    res.status(201).json({ message: "Expense submitted successfully", expense });
+    return res.json({ success: true, expense });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Employee: View own expenses
+// GET http://localhost:4000/api/expenses/my-expenses
 export const getMyExpenses = async (req, res) => {
   try {
     const expenses = await Expense.find({ employee: req.user.id }).sort({ createdAt: -1 });
-    res.json(expenses);
+    return res.json({ success: true, expenses });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Admin: View all expenses (optional, if admin needs reports)
+
+// GET http://localhost:4000/api/expenses/all
 export const getAllExpenses = async (req, res) => {
   try {
     const expenses = await Expense.find().populate("employee", "name email department");
-    res.json(expenses);
+    return res.json({ success: true, expenses });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
